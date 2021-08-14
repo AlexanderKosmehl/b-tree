@@ -14,7 +14,7 @@ describe('BTree', () => {
     expect(tree.root.children).toEqual([])
   })
 
-  test('should insert keys correctly', () => {
+  test('should key insertion correctly', () => {
     tree.insertKey(8)
     expect(tree.root.keys).toEqual([8])
 
