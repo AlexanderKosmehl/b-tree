@@ -9,10 +9,27 @@ export class BTreeNode<Type> {
       this.children = children
     }
 
+    /**
+     * Simple helper function that returns whether the node is a leaf
+     * @returns Whether the node is a leaf
+     */
     isLeaf (): boolean {
       return this.children.length === 0
     }
 
+    /**
+     * Simple helper function that returns whether the node is full
+     * @param order Order of the tree
+     * @returns Whether the node is full given the order of the tree
+     */
+    isFull (order: number) {
+      return this.keys.length >= 2 * order
+    }
+
+    /**
+     * Helper function to insert a key at the appropriate index
+     * @param newKey New key to be inserted into keys
+     */
     insertKey (newKey: Type) {
       // Attempts to find a suitable position for the element
       let insertIndex = this.keys.findIndex(key => newKey < key)
@@ -24,24 +41,21 @@ export class BTreeNode<Type> {
       this.keys.splice(insertIndex, 0, newKey)
     }
 
-    isFull (order: number) {
-      return this.keys.length >= 2 * order
-    }
-
+    /**
+     * Helper function to insert a node at the appropriate index
+     * @param newChild New Node to be inserted into children
+     */
     addChild (newChild: BTreeNode<Type>) {
+      // Sets or overrides childs parent
       newChild.parent = this
-      const firstKey = newChild.keys[0]
 
-      // TODO: Improve this
-      for (let i = 0; i < this.keys.length; i++) {
-        if (firstKey < this.keys[i]) {
-          this.children.splice(i, 0, newChild)
-          break
-        } else if (firstKey > this.keys[i] && !this.keys[i + 1]) {
-          this.children.splice(i + 1, 0, newChild)
-          break
-        }
-      }
+      // Find correct location for child and its keys
+      const firstKey = newChild.keys[0]
+      let insertIndex = this.keys.findIndex(key => firstKey < key)
+      if (insertIndex === -1) insertIndex = this.keys.length
+
+      // Insert it at appropriate location
+      this.children.splice(insertIndex, 0, newChild)
     }
 
     getLeftNeighborNode (): BTreeNode<Type> | null {

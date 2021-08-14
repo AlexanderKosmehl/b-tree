@@ -15,7 +15,7 @@ export class BTree<Type> {
    * Searches the tree recursively for the given value
    * @param value The searched for value
    * @param node The Node to start search with (default = root)
-   * @returns {BTreeNode | null} The Node containing the value or null
+   * @returns The Node containing the value or null
    */
   findNode (value: Type, node: BTreeNode<Type> = this.root): BTreeNode<Type> | null {
     // Node contains no elements
@@ -33,7 +33,11 @@ export class BTree<Type> {
     return this.findNode(value, node.children[nextChildIndex])
   }
 
-  insertKey (newKey: Type) {
+  /**
+   * Inserts a new key into the tree and splits all overfull nodes accordingly
+   * @param newKey New key to be inserted into the tree
+   */
+  insertKey (newKey: Type): void {
     // Find an appropriate leaf node to insert into
     const leafNode = this.getAppropriateLeafNode(newKey)
 
@@ -48,16 +52,33 @@ export class BTree<Type> {
     this.splitNode(leafNode)
   }
 
+  /**
+   * Returns the node in which the key should be inserted
+   * @param newKey New key to be inserted
+   * @param nodeToCheck current node to be checked
+   * @returns The appropriate node
+   */
   getAppropriateLeafNode (newKey: Type, nodeToCheck: BTreeNode<Type> = this.root): BTreeNode<Type> {
+    // Return the node once a leafnode is reached
     if (nodeToCheck.isLeaf()) return nodeToCheck
 
+    // Find the appropriate next child to check
     let nextChildIndex = nodeToCheck.keys.findIndex(key => newKey < key)
     if (nextChildIndex === -1) nextChildIndex = nodeToCheck.keys.length
+
+    // Traverse down the tree recursively
     return this.getAppropriateLeafNode(newKey, nodeToCheck.children[nextChildIndex])
   }
 
+  /**
+   * Splits a node along its median. The median gets transfered up into the parent while the parts to its left and right are the contents of the new child nodes.
+   * @param nodeToSplit The node that should be split
+   */
   splitNode (nodeToSplit: BTreeNode<Type>) {
+    // Get the parent node to insert into or new node if the node to be split is the root
     const parentNode = nodeToSplit.parent ? nodeToSplit.parent : new BTreeNode<Type>()
+
+    // New neighbor which will receive the right half of the keys and children
     const neighborNode = new BTreeNode<Type>()
 
     const median = nodeToSplit.keys[this.order]
