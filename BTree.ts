@@ -37,7 +37,7 @@ export class BTree<Type> {
    * Inserts a new key into the tree and splits all overfull nodes accordingly
    * @param newKey New key to be inserted into the tree
    */
-  insertKey (newKey: Type): void {
+  insert (newKey: Type): void {
     // Find an appropriate leaf node to insert into
     const leafNode = this.getAppropriateLeafNode(newKey)
 
