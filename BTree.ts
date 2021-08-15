@@ -32,6 +32,11 @@ export class BTree<Type> {
     return depth
   }
 
+  contains (key: Type) {
+    if (this.findNode(key)) return true
+    else return false
+  }
+
   /**
    * Searches the tree recursively for the given value
    * @param value The searched for value
