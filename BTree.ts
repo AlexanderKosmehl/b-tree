@@ -108,4 +108,122 @@ export class BTree<Type> {
     // Split parent if necessary
     if (parentNodeIsAlreadyFull) this.splitNode(parentNode)
   }
+
+  remove (target: Type, nodeToCheck: BTreeNode<Type> = this.root) {
+    // Find the node with the key
+    const containingNode = this.findNode(target, nodeToCheck)
+
+    // Return immediately if key does not exist
+    if (!containingNode) return
+
+    // Case 1: Key in internal node
+    if (!containingNode.isLeaf()) {
+      this.removeKeyFromInternalNode(target, containingNode)
+      return
+    }
+
+    // Case 2: Key in leaf
+
+    // Subcase 1: No Underflow -> Key can simply be removed
+    if (containingNode.keys.length > this.order) {
+      containingNode.keys = containingNode.keys.filter(key => key !== target)
+      return
+    }
+
+    // Subcase 2: Underflow after removal -> Steal key
+
+    // Remove key
+    containingNode.keys = containingNode.keys.filter(key => key !== target)
+
+    this.handleUnderflow(containingNode)
+  }
+
+  removeKeyFromInternalNode (target: Type, node: BTreeNode<Type>) {
+    // Remove key
+    const keyPosition = node.keys.findIndex(key => key === target)
+    node.keys.splice(keyPosition, 1)
+    let tempChild = node.children[keyPosition]
+
+    // Traverse to max value
+    while (!tempChild.isLeaf()) {
+      tempChild = tempChild.children[tempChild.children.length - 1]
+    }
+
+    // Take max value from max child and insert it in parent
+    const replaceValue = tempChild.keys[tempChild.keys.length - 1]
+    node.insertKey(replaceValue)
+    this.remove(replaceValue, tempChild)
+  }
+
+  handleUnderflow (containingNode: BTreeNode<Type>) {
+    const leftNeighborNode = containingNode.getLeftNeighborNode()
+    const rightNeighborNode = containingNode.getRightNeighborNode()
+
+    if (!containingNode.parent) return // TODO Value in Root
+
+    const positionInParent = containingNode.parent.children.findIndex(child => containingNode === child)
+
+    // Check neighbors and parent to steal from
+    if (leftNeighborNode && leftNeighborNode.keys.length > this.order) { // Steal from left neighbor
+      // Move key from parent into containing node
+      containingNode.insertKey(containingNode.parent.keys[positionInParent - 1])
+
+      // Move key from neighbor into parent overwriting the duplicate in the parent
+      containingNode.parent.keys[positionInParent - 1] = leftNeighborNode.keys[leftNeighborNode.keys.length - 1]
+
+      // Remove duplicate in the neighbor
+      leftNeighborNode.keys.splice(leftNeighborNode.keys.length - 1, 1)
+    } else if (rightNeighborNode && rightNeighborNode.keys.length > this.order) { // Steal from right neighbor
+      // Move key from parent into containing node
+      containingNode.insertKey(containingNode.parent.keys[positionInParent])
+
+      // Move key from neighbor into parent overwriting the duplicate in the parent
+      containingNode.parent.keys[positionInParent] = rightNeighborNode.keys[0]
+
+      // Remove duplicate in the neighbor
+      rightNeighborNode.keys.splice(0, 1)
+    } else if (leftNeighborNode) { // Merge with left neighbor
+      // Move key from parent into containing node
+      containingNode.insertKey(containingNode.parent.keys[positionInParent - 1])
+
+      // Remove duplicate in parent
+      containingNode.parent.keys.splice(positionInParent - 1, 1)
+
+      // Move all remaining keys from node into neighbor to merge
+      containingNode.keys.forEach(key => leftNeighborNode.insertKey(key))
+
+      // Remove the node after merging
+      containingNode.parent.children.splice(positionInParent, 1)
+
+      // If Parent Node empty now, delete
+      if (containingNode.parent.keys.length === 0 && containingNode.parent.parent == null) {
+        leftNeighborNode.parent = null
+        this.root = leftNeighborNode
+      }
+    } else if (rightNeighborNode) { // Merge with right neighbor
+      // Move key from parent into containing node
+      containingNode.insertKey(containingNode.parent.keys[positionInParent])
+
+      // Remove duplicate in parent
+      containingNode.parent.keys.splice(positionInParent, 1)
+
+      // Move all remaining keys from node into neighbor to merge
+      containingNode.keys.forEach(key => rightNeighborNode.insertKey(key))
+
+      // Remove the node after merging
+      containingNode.parent.children.splice(positionInParent, 1)
+
+      // If Parent Node empty now, delete
+      if (containingNode.parent.keys.length === 0 && containingNode.parent.parent == null) {
+        rightNeighborNode.parent = null
+        this.root = rightNeighborNode
+      }
+
+      if (containingNode.parent) {
+        if (containingNode.parent.keys.length < this.order && containingNode.parent.parent != null) {
+          this.handleUnderflow(containingNode.parent)
+        }
+      }
+    }
+  }
 }
