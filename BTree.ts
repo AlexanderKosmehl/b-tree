@@ -32,6 +32,11 @@ export class BTree<Type> {
     return depth
   }
 
+  /**
+   * Helper function to check for the presence of a key
+   * @param key A key to be searched for
+   * @returns Whether the key is in the tree
+   */
   contains (key: Type) {
     if (this.findNode(key)) return true
     else return false
