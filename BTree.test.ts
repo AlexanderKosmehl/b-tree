@@ -7,14 +7,14 @@ describe('BTree', () => {
   beforeEach(() => {
     tree = new BTree(1)
   })
-  test('init', () => {
+  test('should initialize the tree', () => {
     expect(tree.order).toBe(1)
     expect(tree.root).toBeDefined()
     expect(tree.root.keys).toEqual([])
     expect(tree.root.children).toEqual([])
   })
 
-  test('insert', () => {
+  test('should insert keys and balance tree automatically', () => {
     tree.insert(8)
     expect(tree.root.keys).toEqual([8])
 
@@ -53,10 +53,11 @@ describe('BTree', () => {
     expect(tree.root.children[1].children[1].keys).toEqual([20])
   })
 
-  test('deleteKey', () => {
+  test('should delete keys and rebalance tree automatically', () => {
     // Prepare tree
     [5, 8, 3, 9, 2, 6, 7, 10].forEach(key => tree.insert(key))
 
+    // Remove some keys
     tree.remove(6)
     expect(tree.root.keys).toEqual([5, 8])
     expect(tree.root.children[1].keys).toEqual([7])
@@ -75,5 +76,10 @@ describe('BTree', () => {
     expect(tree.root.keys).toEqual([5])
     expect(tree.root.children[0].keys).toEqual([3])
     expect(tree.root.children[1].keys).toEqual([9, 10])
+
+    // Remove rest of the keys
+    ;[5, 3, 9, 2, 10].forEach(key => tree.remove(key))
+    expect(tree.root.keys).toEqual([])
+    expect(tree.root.children).toEqual([])
   })
 })
