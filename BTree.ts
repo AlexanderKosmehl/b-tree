@@ -1,7 +1,17 @@
 import { BTreeNode } from './BTreeNode'
 
+/**
+ * A class representation of a generic b-tree
+ */
 export class BTree<Type> {
+  /**
+   * The root node of the tree
+   */
   root: BTreeNode<Type>
+
+  /**
+   * The order of the tree which restricts the minimum and maximum number of keys in a node
+   */
   order: number
 
   constructor (order: number) {
@@ -107,6 +117,11 @@ export class BTree<Type> {
     if (parentNodeIsAlreadyFull) this.splitNode(parentNode)
   }
 
+  /**
+   * Removes the target key from the tree (or subtree if given a node)
+   * @param target key to be removed
+   * @param nodeToCheck the node and its subsequent subtree in which the key is searched for. (default = root, but convenient for smart duplicate removal)
+   */
   remove (target: Type, nodeToCheck: BTreeNode<Type> = this.root) {
     // Find the node with the key
     const containingNode = this.findNode(target, nodeToCheck)
@@ -136,6 +151,11 @@ export class BTree<Type> {
     this.handleUnderflow(containingNode)
   }
 
+  /**
+   * Removes the key from the node and rebalances the tree
+   * @param target key to be removed
+   * @param node node containing the key
+   */
   removeKeyFromInternalNode (target: Type, node: BTreeNode<Type>) {
     // Remove key
     const keyPosition = node.keys.findIndex(key => key === target)
@@ -153,73 +173,78 @@ export class BTree<Type> {
     this.remove(replaceValue, tempChild)
   }
 
-  handleUnderflow (containingNode: BTreeNode<Type>) {
-    const leftNeighborNode = containingNode.getLeftNeighborNode()
-    const rightNeighborNode = containingNode.getRightNeighborNode()
+  /**
+   * Recursively fixes underflow issues from the node and its parent chain
+   * @param node the underflowing node
+   */
+  handleUnderflow (node: BTreeNode<Type>) {
+    const leftNeighborNode = node.getLeftNeighborNode()
+    const rightNeighborNode = node.getRightNeighborNode()
 
-    if (!containingNode.parent) return // TODO Value in Root
+    if (!node.parent) return // TODO Value in Root
 
-    const positionInParent = containingNode.parent.children.findIndex(child => containingNode === child)
+    const positionInParent = node.parent.children.findIndex(child => node === child)
 
     // Check neighbors and parent to steal from
     if (leftNeighborNode && leftNeighborNode.keys.length > this.order) { // Steal from left neighbor
       // Move key from parent into containing node
-      containingNode.insertKey(containingNode.parent.keys[positionInParent - 1])
+      node.insertKey(node.parent.keys[positionInParent - 1])
 
       // Move key from neighbor into parent overwriting the duplicate in the parent
-      containingNode.parent.keys[positionInParent - 1] = leftNeighborNode.keys[leftNeighborNode.keys.length - 1]
+      node.parent.keys[positionInParent - 1] = leftNeighborNode.keys[leftNeighborNode.keys.length - 1]
 
       // Remove duplicate in the neighbor
       leftNeighborNode.keys.splice(leftNeighborNode.keys.length - 1, 1)
     } else if (rightNeighborNode && rightNeighborNode.keys.length > this.order) { // Steal from right neighbor
       // Move key from parent into containing node
-      containingNode.insertKey(containingNode.parent.keys[positionInParent])
+      node.insertKey(node.parent.keys[positionInParent])
 
       // Move key from neighbor into parent overwriting the duplicate in the parent
-      containingNode.parent.keys[positionInParent] = rightNeighborNode.keys[0]
+      node.parent.keys[positionInParent] = rightNeighborNode.keys[0]
 
       // Remove duplicate in the neighbor
       rightNeighborNode.keys.splice(0, 1)
     } else if (leftNeighborNode) { // Merge with left neighbor
       // Move key from parent into containing node
-      containingNode.insertKey(containingNode.parent.keys[positionInParent - 1])
+      node.insertKey(node.parent.keys[positionInParent - 1])
 
       // Remove duplicate in parent
-      containingNode.parent.keys.splice(positionInParent - 1, 1)
+      node.parent.keys.splice(positionInParent - 1, 1)
 
       // Move all remaining keys from node into neighbor to merge
-      containingNode.keys.forEach(key => leftNeighborNode.insertKey(key))
+      node.keys.forEach(key => leftNeighborNode.insertKey(key))
 
       // Remove the node after merging
-      containingNode.parent.children.splice(positionInParent, 1)
+      node.parent.children.splice(positionInParent, 1)
 
       // If Parent Node empty now, delete
-      if (containingNode.parent.keys.length === 0 && containingNode.parent.parent == null) {
+      if (node.parent.keys.length === 0 && node.parent.parent == null) {
         leftNeighborNode.parent = null
         this.root = leftNeighborNode
       }
     } else if (rightNeighborNode) { // Merge with right neighbor
       // Move key from parent into containing node
-      containingNode.insertKey(containingNode.parent.keys[positionInParent])
+      node.insertKey(node.parent.keys[positionInParent])
 
       // Remove duplicate in parent
-      containingNode.parent.keys.splice(positionInParent, 1)
+      node.parent.keys.splice(positionInParent, 1)
 
       // Move all remaining keys from node into neighbor to merge
-      containingNode.keys.forEach(key => rightNeighborNode.insertKey(key))
+      node.keys.forEach(key => rightNeighborNode.insertKey(key))
 
       // Remove the node after merging
-      containingNode.parent.children.splice(positionInParent, 1)
+      node.parent.children.splice(positionInParent, 1)
 
       // If Parent Node empty now, delete
-      if (containingNode.parent.keys.length === 0 && containingNode.parent.parent == null) {
+      if (node.parent.keys.length === 0 && !node.parent.parent) {
         rightNeighborNode.parent = null
         this.root = rightNeighborNode
       }
 
-      if (containingNode.parent) {
-        if (containingNode.parent.keys.length < this.order && containingNode.parent.parent != null) {
-          this.handleUnderflow(containingNode.parent)
+      // Handle underflow in next parent
+      if (node.parent) {
+        if (node.parent.keys.length < this.order && node.parent.parent) {
+          this.handleUnderflow(node.parent)
         }
       }
     }
