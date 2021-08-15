@@ -82,4 +82,22 @@ describe('BTree', () => {
     expect(tree.root.keys).toEqual([])
     expect(tree.root.children).toEqual([])
   })
+
+  describe('helper functions', () => {
+    test('getHeight', () => {
+      [8, 9, 10, 11, 15, 20, 17].forEach(key => tree.insert(key))
+
+      expect(tree.getHeight()).toBe(3)
+    })
+
+    test('contains', () => {
+      [8, 9, 10, 11, 15, 20, 17].forEach(key => tree.insert(key))
+
+      expect(tree.contains(17)).toBe(true)
+      expect(tree.contains(8)).toBe(true)
+
+      expect(tree.contains(3)).toBe(false)
+      expect(tree.contains(0)).toBe(false)
+    })
+  })
 })
