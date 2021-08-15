@@ -3,12 +3,10 @@ import { BTreeNode } from './BTreeNode'
 export class BTree<Type> {
   root: BTreeNode<Type>
   order: number
-  height: number // Remove?
 
   constructor (order: number) {
     this.root = new BTreeNode<Type>()
     this.order = order
-    this.height = 1
   }
 
   /**
