@@ -7,14 +7,14 @@ describe('BTree', () => {
   beforeEach(() => {
     tree = new BTree(1)
   })
-  test('should initialize correctly', () => {
+  test('init', () => {
     expect(tree.order).toBe(1)
     expect(tree.root).toBeDefined()
     expect(tree.root.keys).toEqual([])
     expect(tree.root.children).toEqual([])
   })
 
-  test('should handle key insertion correctly', () => {
+  test('insert', () => {
     tree.insert(8)
     expect(tree.root.keys).toEqual([8])
 
@@ -53,54 +53,27 @@ describe('BTree', () => {
     expect(tree.root.children[1].children[1].keys).toEqual([20])
   })
 
-  describe('deleteKey', () => {
-    test('should handle deletion of leaf keys', () => {
-      // Prepare tree
-      [5, 10, 15, 20, 25, 28, 30, 31, 32, 33, 35, 40, 45, 50, 55, 60, 65].forEach(key => tree.insert(key))
+  test('deleteKey', () => {
+    // Prepare tree
+    [5, 8, 3, 9, 2, 6, 7, 10].forEach(key => tree.insert(key))
 
-      // Simple deletion
-      tree.remove(32)
-      expect(tree.root.children[1].children[1].keys).toEqual([31])
+    tree.remove(6)
+    expect(tree.root.keys).toEqual([5, 8])
+    expect(tree.root.children[1].keys).toEqual([7])
 
-      // Has to rotate leaf into parent
-      tree.remove(31)
-      expect(tree.root.children[1].keys).toEqual([28, 33])
-      expect(tree.root.children[1].children[0].keys).toEqual([25])
-      expect(tree.root.children[1].children[1].keys).toEqual([30])
-      expect(tree.root.children[1].children[2].keys).toEqual([35])
+    tree.remove(7)
+    expect(tree.root.keys).toEqual([3, 8])
+    expect(tree.root.children[0].keys).toEqual([2])
+    expect(tree.root.children[1].keys).toEqual([5])
 
-      // Has to move and move parent node into leaf
-      tree.remove(30)
-      expect(tree.root.children[1].keys).toEqual([33])
-      expect(tree.root.children[1].children[0].keys).toEqual([25, 28])
-      expect(tree.root.children[1].children[1].keys).toEqual([45])
-    })
+    tree.remove(2)
+    expect(tree.root.keys).toEqual([8])
+    expect(tree.root.children[0].keys).toEqual([3, 5])
+    expect(tree.root.children[1].keys).toEqual([9, 10])
 
-    test('should handle deletion of internal key', () => {
-      // Prepare tree
-      [5, 10, 15, 20, 25, 28, 30, 31, 32, 33, 35, 40, 45, 50, 55, 60, 65].forEach(key => tree.insert(key))
-
-      tree.remove(33)
-      expect(tree.root.children[1].keys).toEqual([30, 32])
-      expect(tree.root.children[1].children[0].keys).toEqual([25])
-      expect(tree.root.children[1].children[1].keys).toEqual([31])
-      expect(tree.root.children[1].children[2].keys).toEqual([35])
-
-      tree.remove(30)
-      expect(tree.root.children[1].keys).toEqual([32])
-      expect(tree.root.children[1].children[0].keys).toEqual([25, 31])
-      expect(tree.root.children[1].children[1].keys).toEqual([35])
-    })
-
-    test('should handle shrinking of tree after deletion', () => {
-      // Prepare tree
-      [5, 10, 15, 20, 30, 35, 70].forEach(key => tree.insert(key))
-
-      tree.remove(10)
-      expect(tree.root.keys).toEqual([20, 35])
-      expect(tree.root.children[0].keys).toEqual([5, 35])
-      expect(tree.root.children[1].keys).toEqual([30])
-      expect(tree.root.children[2].keys).toEqual([70])
-    })
+    tree.remove(8)
+    expect(tree.root.keys).toEqual([5])
+    expect(tree.root.children[0].keys).toEqual([3])
+    expect(tree.root.children[1].keys).toEqual([9, 10])
   })
 })
