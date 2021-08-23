@@ -237,6 +237,9 @@ export class BTree<Type> {
       // Move all remaining keys from node into neighbor to merge
       node.keys.forEach(key => leftNeighborNode.insertKey(key))
 
+      // Move all remaining children from node to neighbor
+      node.children.forEach(child => leftNeighborNode.addChild(child))
+
       // Remove the node after merging
       node.parent.children.splice(positionInParent, 1)
 
@@ -255,6 +258,9 @@ export class BTree<Type> {
       // Move all remaining keys from node into neighbor to merge
       node.keys.forEach(key => rightNeighborNode.insertKey(key))
 
+      // Move all remaining children from node to neighbor
+      node.children.forEach(child => rightNeighborNode.addChild(child))
+
       // Remove the node after merging
       node.parent.children.splice(positionInParent, 1)
 
@@ -263,12 +269,11 @@ export class BTree<Type> {
         rightNeighborNode.parent = null
         this.root = rightNeighborNode
       }
-
-      // Handle underflow in next parent
-      if (node.parent) {
-        if (node.parent.keys.length < this.order && node.parent.parent) {
-          this.handleUnderflow(node.parent)
-        }
+    }
+    // Handle underflow in next parent
+    if (node.parent) {
+      if (node.parent.keys.length < this.order && node.parent.parent) {
+        this.handleUnderflow(node.parent)
       }
     }
   }
