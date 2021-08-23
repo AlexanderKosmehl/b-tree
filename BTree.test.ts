@@ -83,6 +83,26 @@ describe('BTree', () => {
     expect(tree.root.children).toEqual([])
   })
 
+  test('difficult deletion in root', () => {
+    // Prepare tree
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach(key => tree.insert(key))
+
+    tree.remove(8)
+    expect(tree.root.keys).toEqual([7])
+    expect(tree.root.children.length).toBe(2)
+
+    expect(tree.root.children[0].keys).toEqual([2, 4])
+    expect(tree.root.children[0].children.length).toBe(3)
+    expect(tree.root.children[0].children[0].keys).toEqual([1])
+    expect(tree.root.children[0].children[1].keys).toEqual([3])
+    expect(tree.root.children[0].children[2].keys).toEqual([5, 6])
+
+    expect(tree.root.children[1].keys).toEqual([10])
+    expect(tree.root.children[1].children.length).toBe(2)
+    expect(tree.root.children[1].children[0].keys).toEqual([9])
+    expect(tree.root.children[1].children[1].keys).toEqual([11])
+  })
+
   describe('helper functions', () => {
     test('getHeight', () => {
       [8, 9, 10, 11, 15, 20, 17].forEach(key => tree.insert(key))
